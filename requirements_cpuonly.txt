@@ -1,0 +1,21 @@
+# Core
+jax
+flax
+orbax-checkpoint
+evojax
+
+# Training visualization (+Golang packages)
+grpcio
+grpcio-tools
+
+# External tasks
+gymnax
+
+# Task rendering
+pillow
+matplotlib
+
+pytest
+# Profiling - avoids "Can't import tensorflow.python.profiler.trace"
+tensorflow
+

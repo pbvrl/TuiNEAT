@@ -1,0 +1,127 @@
+syntax = "proto3";
+
+package grpc_api;
+option go_package = "training_visualizer/grpc_api/";
+
+message TrainingData {
+  int32 gen = 1;                       // { >=1 }
+  repeated Network networks = 2;       // ( <=max_species )
+  repeated Species species = 3;        // ( <=max_species )
+  float popAvgFitness = 4;             // { (-inf, inf) }
+  int32 modifiedStagnationAge = 5;    // { >0 }
+  PerformanceRelatedParams perfRelatedParams = 6;       // Performance statistics
+  VizHparams vizHparams = 7;           // Subset of hyperparameters shown in the visualization
+  float minWeight = 8;                  // { (-inf, inf): minimum enabled connection weight in the population }
+  float maxWeight = 9;                  // { (-inf, inf): maximum enabled connection weight in the population }
+  float minBias = 10;                   // { (-inf, inf): minimum node bias in the population }
+  float maxBias = 11;                   // { (-inf, inf): maximum node bias in the population }
+  string taskName = 12;
+  repeated string inputNames = 13;      // ( n_inputs ): names of the task observation space inputs
+  repeated string outputNames = 14;     // ( n_outputs ): names of the task action space outputs
+  float ctrnnMinAlpha = 15;             // { [0, 1]: minimum node alpha (CTRNN leak coefficient) in the population }
+  float ctrnnMaxAlpha = 16;             // { [0, 1]: maximum node alpha (CTRNN leak coefficient) in the population }
+}
+
+message Network {
+  repeated Connection cs = 1;          // ( <=max_cs )
+  repeated Node toposrtdNds = 2;       // ( <=max_nds )
+  float fitness = 3;                   // { (-inf, inf) }
+  int32 speciesId = 4;                 // { >0 }
+}
+
+message Connection {
+  int32 inId = 1;                      // { >0 }
+  int32 outId = 2;                     // { >0 }
+  bool enabled = 3;                    // { false: disabled, true: enabled }
+  float weight = 4;                    // { (-inf, inf): weight }
+}
+
+message Node {
+  int32 id = 1;                        // { >0 }
+  int32 type = 2;                      // { 1: input, 2: output, 3: hidden }
+  int32 aggregation = 3;               // { -1: input node, 1: sum, 2: maxabs }
+  int32 activation = 4;                // { -1: input node, 0: identity, 1: tanh, 2: mish, 3: sin, 4: abs }
+  float bias = 5;                      // { 0.0: input node / value 0.0, (-inf, inf): bias value }
+  float ctrnnAlpha = 6;                // { [0, 1]: CTRNN leak coefficient. 1.0 = no memory (full replacement), 0.0 = pure memory }
+}
+
+message Species {
+  int32 id = 1;                        // { >0 }
+  int32 quota = 2;                     // { >0: allocated population slots for next generation }
+  int32 memberCount = 3;               // { >=0: actual number of individuals in the species/island }
+  float minFitness = 4;                // { (-inf, inf): minimum fitness reached by an individual of the species/island in the current generation }
+  float maxFitness = 5;                // { (-inf, inf): maximum fitness reached by an individual of the species/island in the current generation }
+  float compatThreshold = 6;           // { >=0: compatibility threshold for species, 0 for islands }
+  int32 stagnation = 7;               // { >=0: generations since best fitness improved }
+}
+
+message PerformanceRelatedParams {
+  int32 popSize = 1;                   // { >0 }
+  bool gpuEnabled = 2;                 // { false: CPU, true: GPU }
+  int32 maxConns = 3;                  // { >0 }
+  int32 maxNodes = 4;                  // { >0 }
+  int32 rolloutRepeats = 5;            // { >0: value }
+  int32 maxRolloutSteps = 6;              // { >0: value }
+}
+
+message VizHparams {
+  VizTunableHparams vizTunableHparams = 1; // Hyperparameters tunable from the visualization
+  int32 popSize = 2;                   // { >0 }
+  bool feedforward = 3;            // { false: ctrnn, true: feedforward }
+  int32 ctrnnIntegrationSteps = 4;       // { >0 }
+  int32 intraspeciesUnchangedFrontrunners = 5; // { >=0 }
+  bool normalizeObs = 6;               // { false: raw, true: normalized }
+}
+
+message VizTunableHparams {
+  float addOneConnProb = 1;            // { [0, 1] }
+  float addOneNodeProb = 2;            // { [0, 1] }
+  float eraseConnProb = 3;           // { [0, 1] }
+  float perturbWghtStdev = 5;           // { >0 }
+  float replaceWghtStdev = 6;          // { >0 }
+  float perturbWghtProb = 7;           // { [0, 1] }
+  float replaceWghtProb = 8;           // { [0, 1] }
+  float perturbBiasStdev = 9;          // { >0 }
+  float replaceBiasStdev = 10;         // { >0 }
+  float perturbBiasProb = 11;          // { [0, 1] }
+  float replaceBiasProb = 12;          // { [0, 1] }
+  float perturbAlphaStdev = 38;        // { >0 }
+  float perturbAlphaProb = 39;         // { [0, 1] }
+  float replaceAlphaProb = 40;         // { [0, 1] }
+  float changeActProb = 13;            // { [0, 1] }
+  float changeAggProb = 14;            // { [0, 1] }
+  bool defaultOutputActivation = 15;   // { false: both hidden and output nodes can mutate, true: output nodes change to the default activation }
+  float disableCProb = 16;             // { [0, 1] }
+  float reenableOneCProb = 17;         // { [0, 1] }
+  float crossoverRate = 18;            // { [0, 1] }
+  float enabledRecessivenessProb = 19; // { [0, 1] }
+  float avgWeightsProb = 20;          // { [0, 1] }
+  float intraspeciesParenthoodEligibility = 21; // { [0, 1] }
+  float speciesFitnessPowerscaling = 22; // { >0 }
+  float interspeciesMatingRatio = 23;  // { [0, 1] }
+  float compatExcessCoeff = 24;         // { >0 }
+  float compatDisjointCoeff = 25;       // { >0 }
+  float compatWghtCoeff = 26;           // { >0 }
+  float compatAggCoeff = 27;            // { >0 }
+  float compatActCoeff = 28;            // { >0 }
+  float compatEnabledCoeff = 29;        // { >0 }
+  float compatBiasCoeff = 30;           // { >0 }
+  float compatAlphaCoeff = 41;          // { >0 }
+  float baseCompatThreshold = 31;       // { >0 }
+  bool dynamicThresholds = 32;           // { false: thresholds don't change, true: thresholds move closer to (average distance to representative)*ratio }
+  float dynamicThresholdRatio = 33;          // { (0, 1] }
+  float dynamicThresholdLearningRate = 34;   // { (0, 1] }
+  int32 baseStagnationAge = 35;            // { >0 }
+  float stagnationAgePowerlawGrowth = 36; // { >=0 }
+  int32 nStagnationExemptTopSpecies = 37; // { >=0 }
+}
+
+message HparamsRequest {
+  VizTunableHparams vizTunableHparams = 1;
+}
+
+message Empty {}
+
+service TrainingVisualizer {
+  rpc SyncVisualization (TrainingData) returns (HparamsRequest);
+}

@@ -1,0 +1,13 @@
+log/
+src/extra_modules/multiagent/**
+test/
+
+.venv/
+
+**/grpc_api/schema.pb.go
+**/grpc_api/schema_grpc.pb.go
+**/grpc_api/schema_pb2.py
+**/grpc_api/schema_pb2_grpc.py
+src/extra_modules/training_visualizer/grpc_api/schema.proto
+training_visualizer/setup_delve.sh
+training_visualizer/server_binary
